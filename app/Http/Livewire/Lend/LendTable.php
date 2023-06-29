@@ -12,6 +12,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class LendTable extends Component implements HasTable
 {
@@ -41,35 +42,42 @@ class LendTable extends Component implements HasTable
             TextColumn::make('amount')->label('Montant')->searchable(),
             TextColumn::make('user.full_name')->label('Emprunteur')->searchable(),
             BadgeColumn::make('state')->label('Statut')
-                        ->color(function(Lend $record) {
+                        ->color(function (Lend $record) {
                             if($record->state instanceof Confirmed) {
                                 return 'warning';
-                            }elseif($record->state instanceof \App\State\Rejected || $record->state instanceof \App\State\Cancelled) {
+                            } elseif($record->state instanceof \App\State\Rejected || $record->state instanceof \App\State\Cancelled) {
                                 return 'danger';
-                            }elseif($record->state instanceof \App\State\Validated) {
+                            } elseif($record->state instanceof \App\State\Validated) {
                                 return 'primary';
                             }
                             return 'success';
                         })
-                        ->formatStateUsing(fn(Lend $record) => $record->state->description()),
+                        ->formatStateUsing(fn (Lend $record) => $record->state->description()),
         ];
     }
 
     protected function getTableActions(): array
     {
         return [
-            Action::make('edit')->label('Annuler')->hidden(fn(Lend $record) => ! $record->canBeCancelled())->color('danger')->icon('heroicon-o-x-circle')->requiresConfirmation()->url(function (Lend $record) {
+            Action::make('edit')->label('Annuler')->hidden(fn (Lend $record) => ! $record->canBeCancelled())->color('danger')->icon('heroicon-o-x-circle')->requiresConfirmation()->url(function (Lend $record) {
                 return route('change-state', [$record, 'state' => 'cancelled']);
             }),
-            Action::make('validated')->label('Approuver')->hidden(fn(Lend $record) => ! $record->canBeValidated())->icon('heroicon-o-check-circle')->requiresConfirmation()->color('warning')->url(function (Lend $record) {
+            Action::make('validated')->label('Approuver')->hidden(fn (Lend $record) => ! $record->canBeValidated())->icon('heroicon-o-check-circle')->requiresConfirmation()->color('warning')->url(function (Lend $record) {
                 return route('change-state', [$record, 'state' =>'validated']);
             }),
-            Action::make('rejected')->label('Rejeter')->hidden(fn(Lend $record) =>! $record->canBeRejected())->icon('heroicon-o-ban')->requiresConfirmation()->color('danger')->url(function (Lend $record) {
+            Action::make('rejected')->label('Rejeter')->hidden(fn (Lend $record) =>! $record->canBeRejected())->icon('heroicon-o-ban')->requiresConfirmation()->color('danger')->url(function (Lend $record) {
                 return route('change-state', [$record, 'state' =>'rejected']);
             }),
-            Action::make('completed')->label('Accepeter')->hidden(fn(Lend $record) =>! $record->canBeCompleted())->icon('heroicon-o-check-circle')->requiresConfirmation()->color('success')->url(function (Lend $record) {
+            Action::make('completed')->label('Accepeter')->hidden(fn (Lend $record) =>! $record->canBeCompleted())->icon('heroicon-o-check-circle')->requiresConfirmation()->color('success')->url(function (Lend $record) {
                 return route('change-state', [$record, 'state' =>'completed']);
             }),
+        ];
+    }
+
+    protected function getTableHeaderActions(): array
+    {
+        return [
+            ExportAction::make('Exporter')->label('Exporter')->icon('heroicon-o-download')->color('warning'),
         ];
     }
 
