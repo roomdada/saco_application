@@ -1,0 +1,2 @@
+
+   <livewire:stats>
